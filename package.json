@@ -1,4 +1,29 @@
 {
   "name": "md-links",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "description": "![Diagrama-de-flujo-mdLinks](./img/diagrama.jpg)",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DianaCato/BOG002-md-links.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DianaCato/BOG002-md-links/issues"
+  },
+  "homepage": "https://github.com/DianaCato/BOG002-md-links#readme",
+  "devDependencies": {
+    "jest": "^26.6.3"
+  },
+  "dependencies": {
+    "markdown-link-extractor": "^1.2.7"
+  }
 }
