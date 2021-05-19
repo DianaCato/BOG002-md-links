@@ -1,72 +1,74 @@
 const fs = require('fs');
 const path = require('path');
-const markdownLinkExtractor = require('markdown-link-extractor');
+const markdownLinkExtractor = require('./markdownw-links-extractor-modificado/markdownLinksExtractor.js');
 
 // Identificar si la ruta es file o folder
 
-const ruta = "..\BOG002-data-lovers";
-const ruta2 = "C:/Users/DELL/Documents/BOG002/BOG002-data-lovers/EXTRA.md";
-const ruta3 = "C:/Users/DELL/Documents/BOG002/BOG002-data-lovers";
-const arrayMd = [];
-
-
 function DetectPath(ruta) {
-    fs.stat(ruta, function (err, stats) {
-        if (err) {
-            return console.log('Ruta no encontrada');
-        }
+    return new Promise(function (resolve, reject) {
+        fs.stat(ruta, function (err, stats) {
+            // Verificar el tipo de archivo
+            if (err) {
+                reject(err.message);
+            }
+            if(stats.isDirectory()) {
+                leerArchivos(ruta).then(res => {
+                    resolve(res)
+                });
+            }
+            if (stats.isFile()) {
+                extraerLinks(ruta).then(data => {
+                    resolve(data)
+                })
+                .catch(err => reject(err));
+            }
+        
+        })
 
-        // Verificar el tipo de archivo
-        if (stats.isFile()) {
-            console.log("La ruta corresponde a un archivo");
-            if (path.extname(ruta) == ".md"){
-                arrayMd.push(ruta)
-                extraerLinks(arrayMd[0])
-            }
-            else {
-                console.log('El archivo no es markdown')
-            }
-        }
-        else if (stats.isDirectory()) {
-            console.log("La ruta corresponde a un directorio");
-            leerArchivos(ruta);
-        }
-    });
+    })
 }
 
 // Encontrar archivos .md
-const leerArchivos = (ruta) => fs.readdir(ruta, (err, files) => {
-    if (err) { console.log(err); }
-    else {
-        files.forEach(file => {
-            if (path.extname(file) == ".md")
-                arrayMd.push(file)
-        })
-        console.log(arrayMd);
-    }
-});
-
-// Extraer links
-function extraerLinks (file){
-    const markdown = fs.readFileSync(file, { encoding: 'utf8' });
-
-    const links = markdownLinkExtractor(markdown);
-    
-    links.forEach(link => {
-        console.log(link);
-    });
-    
+function leerArchivos(ruta) {
+    return new Promise(function (resolve, reject) {
+        fs.readdir(ruta, (err, files) => {
+            let arrayFiles = [];
+            if (err) { reject(err); }
+            else {
+                files.forEach(file => {
+                    if (path.extname(file) == ".md")
+                        arrayFiles.push(file);
+                })
+                if (arrayFiles.length == 0)
+                  arrayFiles = "No se encontraron archivos markdown"
+            }
+            resolve(arrayFiles)
+        });
+    })
 }
 
-DetectPath(ruta2);
+// Extraer links
+function extraerLinks(file) {
+    return new Promise (function (resolve, reject){
+        const markdown = fs.readFileSync(file, { encoding: 'utf8' });
 
-
-//const resolverRuta = (data) => path.resolve(data);
-
-//console.log(resolverRuta(ruta))
-
-
-
+        const links = markdownLinkExtractor(markdown);
+        const data = [];
+        links.forEach(link => {
+           if(link[0].includes('http')){
+            data.push({
+                href : link[0],
+                text : link[1],
+                file,
+            })
+           } 
+        })
+        if(data.length == 0)
+        reject("El archivo no contiene links");
+        else 
+        resolve(data)
+    })
+}
 
 module.exports = {
     DetectPath

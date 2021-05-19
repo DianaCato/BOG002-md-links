@@ -1,20 +1,15 @@
 const mdLinks = require("../index.js");
-const DetectPath = require("../api.js");
+
 
 describe("mdLinks", () => {
   test("mdLinks es una función", () => {
     expect(typeof mdLinks.mdLinks).toBe("function")
   })
+  test("Arroja error cuando no se ingresa una ruta", () => {
+    expect.assertions(1);
+    return mdLinks.mdLinks().catch(e => expect(e.message).toMatch("No ingreso ninguna ruta"));
+  });
+  
 })
 
-describe("DetectPath", () => {
-  test("DetectPath es una función", () => {
-    expect(typeof DetectPath.DetectPath).toBe("function")
-  })
-
-  test("DetectPath identifica cuando una ruta no existe", () => {
-   
-    //expect(DetectPath.DetectPath("./data")).resolves.toBe("Ruta no encontrada")
-  })
-})
 
