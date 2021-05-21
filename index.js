@@ -10,16 +10,36 @@ const DP = require('./api.js');
 
 function mdLinks(path, options = { validate: false }) {
   return new Promise(function (resolve, reject) {
-    switch (options.validate) {
-      case false:
-        (path) ? DP.DetectPath(path).then(res=> resolve (res))
-        .catch(err => reject(err)) 
-        : reject(new Error('No ingreso ninguna ruta'))
-        break;
-      case true:
-        resolve('si quiere validar')
-        break;
-    }
+    (path) ? DP.DetectPath(path).then(res => {
+      switch (true) {
+        case (options.validate == false):
+          resolve(res)
+          break;
+        case (options.validate && !Array.isArray(res[0]) && typeof res != 'string'):
+          const ValidadorLinks = [];  
+          res.forEach(obj =>{
+            ValidadorLinks.push(DP.Status(obj))
+          })
+          Promise.all(ValidadorLinks).then(r => resolve(r))
+          break;
+        case (options.validate && Array.isArray(res[0])):
+          const arrayValidate = []; 
+          res.forEach(element => {
+            if (typeof element == 'object') {
+             
+              element.forEach(el => {
+                arrayValidate.push(DP.Status(el))
+              })
+            }
+          })
+          Promise.all(arrayValidate).then(r => resolve(r));
+          break;
+        default:
+          resolve(res)
+      }
+    })
+      .catch(err => reject(err))
+      : reject(new Error('No ingreso ninguna ruta'))
   })
 }
 

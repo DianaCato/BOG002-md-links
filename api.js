@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 const markdownLinkExtractor = require('./markdownw-links-extractor-modificado/markdownLinksExtractor.js');
-const { extname, resolve } = require('path');
 
 // Majeno de la ruta 
 
@@ -117,12 +116,42 @@ function extraerLinks(file) {
     })
 }
 
-// fetch('https://nodejs.org/')
-//   .then(response =>{ 
-
-//     console.log(response.status);
-//   });;
+// Validar links
+const Status = (Link) => {
+    return new Promise(function (resolve) {
+        fetch(Link.href)
+            .then(response => {
+                if (response.status >= 200 && response.status <= 399) {
+                    resolve({
+                        href: Link.href,
+                        text: Link.text.substr(0, 50),
+                        file: Link.file,
+                        status: response.status,
+                        ok: 'Ok'
+                    })
+                } else if (response.status < 200 || response.status >= 400) {
+                    resolve({
+                        href: Link.href,
+                        text: Link.text.substr(0, 50),
+                        file: Link.file,
+                        status: response.status,
+                        ok: 'Fail'
+                    })
+                }
+            })
+            .catch(() => {
+                resolve(validateLinkStatus = {
+                    href: Link.href,
+                    text: Link.text.substr(0, 50),
+                    file: Link.file,
+                    status: 404,
+                    statusText: 'Fail'
+                })
+            })
+    });
+}
 
 module.exports = {
-    DetectPath
+    DetectPath,
+    Status
 };
