@@ -24,6 +24,7 @@
     "jest": "^26.6.3"
   },
   "dependencies": {
-    "markdown-link-extractor": "^1.2.7"
+    "markdown-link-extractor": "^1.2.7",
+    "node-fetch": "^2.6.1"
   }
 }
