@@ -1,10 +1,13 @@
 const mdLinks = require("../index.js");
-const rutaSinLinks = "C:/Users/DELL/Documents/BOG002/BOG002-md-links/ReadmeTest/ReadmeSinLinks.md";
-const rutaConLink = "./ReadmeTest/ReadmeTest.md";
+const dirname = "C:/Users/DELL/Documents/BOG002/BOG002-md-links";
 
 describe("mdLinks", () => {
   test("mdLinks es una función", () => {
     expect(typeof mdLinks.mdLinks).toBe("function")
+  })
+  test("mdLinks retorna una promesa", () => {
+    const md = mdLinks.mdLinks;
+    expect(md(__dirname) instanceof Promise).toBeTruthy();
   })
   test("Arroja error cuando no se ingresa una ruta", () => {
     expect.assertions(1);
@@ -12,34 +15,78 @@ describe("mdLinks", () => {
   });
   test("Error cuando no encuentra la ruta", () => {
     expect.assertions(1);
-    return mdLinks.mdLinks("../ruta").catch(e => expect(e.message).toMatch("La ruta no existe")); 
+    return mdLinks.mdLinks("../ruta").catch(e => expect(e.message).toMatch("La ruta no existe"));
   });
   test("Error cuando la carpeta no contiene archivos .md", () => {
     expect.assertions(1);
-    return expect (mdLinks.mdLinks("./img")).resolves.toBe("La ruta no contiene archivos markdown"); 
+    return expect(mdLinks.mdLinks("./img")).resolves.toBe("La ruta no contiene archivos markdown");
   });
   test("Error cuando el archivo ingresado no es .md", () => {
     expect.assertions(1);
-    return expect (mdLinks.mdLinks(__filename)).resolves.toBe("La ruta no es de un archivo markdown"); 
+    return expect(mdLinks.mdLinks(__filename)).resolves.toBe("La ruta no es de un archivo markdown");
   });
-  test("Retorna un array con los datos de los links", () => {
-    return expect (typeof mdLinks.mdLinks("./ReadmeTest")).toBe("object"); 
+  test("La promesa se resuelve en un array con los datos de los links", () => {
+    return expect(typeof mdLinks.mdLinks("./ReadmeTest")).toBe("object");
   });
   test("Error cuando el archivo no contiene links", () => {
     expect.assertions(1);
-    return expect (mdLinks.mdLinks('./ReadmeTest/ReadmeSinLinks.md')).resolves.toBe("El archivo ./ReadmeTest/ReadmeSinLinks.md no contiene links"); 
+    return expect(mdLinks.mdLinks('./ReadmeTest/ReadmeSinLinks.md')).resolves.toBe("El archivo ./ReadmeTest/ReadmeSinLinks.md no contiene links");
   });
   test("Se resuelve con un array de objetos cuando el archivo contiene links", () => {
     expect.assertions(1);
-    return expect (mdLinks.mdLinks("./ReadmeTest/ReadmeTest.md")).resolves.toStrictEqual([{"file": "./ReadmeTest/ReadmeTest.md", 
-                                                                          "href": "https://es.wikipedia.org/wiki/Markdown", 
-                                                                          "text": "Markdown"}]); 
+    return expect(mdLinks.mdLinks("./ReadmeTest/ReadmeTest.md")).resolves.toStrictEqual([{
+      "file": "./ReadmeTest/ReadmeTest.md",
+      "href": "https://es.wikipedia.org/wiki/Markdown",
+      "text": "Markdown"
+    },
+    {
+      "file": "./ReadmeTest/ReadmeTest.md",
+      "href": "https://BUiAdamdrOys6lEB1ewDN8/Prototipo?node-id=0%3A1",
+      "text": "Archivo fail con 404",
+    },
+    {
+      "file": "./ReadmeTest/ReadmeTest.md",
+      "href": "https://findtheinvisiblecow.com/meow",
+      "text": "Archivo con error",
+    }]);
   });
   test("Salta archivos node_modules", () => {
-    return expect ( mdLinks.mdLinks(__dirname)).resolves.toBeDefined()
+    expect.assertions(1);
+    return expect(mdLinks.mdLinks(dirname)).resolves.toBeDefined()
   });
-  
-  
+});
+
+describe("mdLinks { validate: true }",() =>{
+  test("Validate true resuelve un array de objetos que contiene la data de los links", () => {
+    return mdLinks.mdLinks("C:/Users/DELL/Documents/BOG002/BOG002-cipher/src", { validate: true }).then(r =>{
+expect(r).toBeDefined();
+    });
+  })
+  test("El status incluye 'ok' o 'fail' segun la respuesta http", () => {
+    expect.assertions(1);
+    return expect(mdLinks.mdLinks("./ReadmeTest/ReadmeTest.md", { validate: true })).resolves.toStrictEqual([{
+      "file": "./ReadmeTest/ReadmeTest.md",
+      "href": "https://es.wikipedia.org/wiki/Markdown",
+      "ok": "Ok",
+      "status": 200,
+      "text": "Markdown"
+    },
+    {
+      "file": "./ReadmeTest/ReadmeTest.md",
+      "href": "https://BUiAdamdrOys6lEB1ewDN8/Prototipo?node-id=0%3A1",
+      "ok": "Fail",
+      "status": 404,
+      "text": "Archivo fail con 404",
+    },
+    {
+      "file": "./ReadmeTest/ReadmeTest.md",
+      "href": "https://findtheinvisiblecow.com/meow",
+      "ok": "Fail",
+      "status": 403,
+      "text": "Archivo con error",
+    }]);
+  });
+  test("Validate true resuelve con un mensaje si no encuentra archivos .md", () => {
+    return expect(mdLinks.mdLinks(__dirname, { validate: true })).resolves.toBe("La ruta no contiene archivos markdown")
+  })
 })
-
-

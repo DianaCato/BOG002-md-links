@@ -16,17 +16,16 @@ function mdLinks(path, options = { validate: false }) {
           resolve(res)
           break;
         case (options.validate && !Array.isArray(res[0]) && typeof res != 'string'):
-          const ValidadorLinks = [];  
-          res.forEach(obj =>{
+          const ValidadorLinks = [];
+          res.forEach(obj => {
             ValidadorLinks.push(DP.Status(obj))
           })
           Promise.all(ValidadorLinks).then(r => resolve(r))
           break;
         case (options.validate && Array.isArray(res[0])):
-          const arrayValidate = []; 
+          const arrayValidate = [];
           res.forEach(element => {
             if (typeof element == 'object') {
-             
               element.forEach(el => {
                 arrayValidate.push(DP.Status(el))
               })

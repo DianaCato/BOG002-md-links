@@ -145,7 +145,7 @@ const Status = (Link) => {
                     text: Link.text.substr(0, 50),
                     file: Link.file,
                     status: 404,
-                    statusText: 'Fail'
+                    ok: 'Fail'
                 })
             })
     });
