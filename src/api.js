@@ -1,52 +1,48 @@
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
-const markdownLinkExtractor = require('./markdownw-links-extractor-modificado/markdownLinksExtractor.js');
+const markdownLinkExtractor = require('../markdownw-links-extractor-modificado/markdownLinksExtractor.js');
 
 // Majeno de la ruta 
 
 function DetectPath(ruta) {
     return new Promise(function (resolve, reject) {
         let archivosMd;
-        let dataFinal;
-        rutaNoExiste(ruta).then(noExiste =>
+        existeRuta(ruta).then(noExiste =>
             noExiste ? reject(new Error('La ruta no existe'))
-                : recursion(ruta).then(data => {
+                : buscadorDeArchivos(ruta).then(data => {
                     if (typeof data == 'string') {
                         fs.stat(data, function (err, stats) {
                             if (err) {
-                                reject(err.message);
+                                reject(err)
                             }
                             if (stats.isFile()) {
                                 path.extname(data) == '.md' ?
                                     extraerLinks(data).then(dataLinks => {
                                         resolve(dataLinks)
                                     })
-                                    : resolve('La ruta no es de un archivo markdown')
+                                    : reject(new Error('La ruta no es de un archivo markdown'))
                             }
                         })
                     }
                     else {
-                        archivosMd = data.join(',').split(',')
-                        const filtradoMd = archivosMd.filter(file => file.includes('.md'))
+                        const todosLosArchivos = data.join(',').split(',')
+                        const filtradoArchivosMd = todosLosArchivos.filter(file => file.includes('.md'))
                         const promesasLinks = [];
-                        filtradoMd.forEach(file => {
+                        filtradoArchivosMd.forEach(file => {
                             promesasLinks.push(extraerLinks(file))
                         })
-                        promesasLinks.length == 0 ? resolve('La ruta no contiene archivos markdown')
-                            : Promise.all(promesasLinks).then(data =>
-                                resolve(dataFinal = data)
-                            )
+                        promesasLinks.length == 0 ? reject(new Error('La ruta no contiene archivos markdown'))
+                            : Promise.all(promesasLinks).then(dataFinal => {
+                                resolve(Array.prototype.concat(...dataFinal))
+                            })
                     }
                 })
-
         )
     })
-
 }
 
-// Verificar si la ruta existe
-function rutaNoExiste(ruta) {
+function existeRuta(ruta) {
     return new Promise(function (resolve) {
         fs.access(ruta, fs.constants.F_OK, (error) => {
             error ? resolve(true) : resolve(false);
@@ -54,31 +50,29 @@ function rutaNoExiste(ruta) {
     })
 }
 
-// Recursion si la ruta es un archivo
-function recursion(ruta) {
+function buscadorDeArchivos(ruta) {
     if (ruta.includes('node_modules')) {
         return;
     }
     return new Promise(function (resolve, reject) {
-        let arreglo;
+        //let arreglo;
         const promesas = [];
         fs.stat(ruta, function (err, stats) {
             if (err) {
-                reject(err.message);
+                reject(err);
             }
-            stats.isDirectory() ? leerArchivos(ruta).then(files => {
+            stats.isDirectory() ? rutasDeArchivos(ruta).then(files => {
                 for (let i = 0; i < files.length; i++) {
-                    promesas.push(recursion(files[i]))
+                    promesas.push(buscadorDeArchivos(files[i]))
                 }
-                Promise.all(promesas).then(resp => resolve(arreglo = resp))
+                Promise.all(promesas).then(resp => resolve(resp))
             })
-                : resolve(arreglo = ruta)
+                : resolve(ruta)
         })
     })
 }
 
-// Encontrar archivos .md
-function leerArchivos(ruta) {
+function rutasDeArchivos(ruta) {
     return new Promise(function (resolve, reject) {
         fs.readdir(ruta, (err, files) => {
             let arrayFiles = [];
@@ -95,24 +89,23 @@ function leerArchivos(ruta) {
 
 // Extraer links
 function extraerLinks(file) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         const markdown = fs.readFileSync(file, { encoding: 'utf8' });
-
         const links = markdownLinkExtractor(markdown);
         const data = [];
         links.forEach(link => {
             if (link[0].includes('http')) {
-                data.push({
-                    href: link[0],
-                    text: link[1],
-                    file,
-                })
+                data.push(
+                    {
+                        href: link[0],
+                        text: link[1],
+                        file,
+                    }
+                )
             }
         })
-        if (data.length == 0)
-            resolve(`El archivo ${file} no contiene links`);
-        else
-            resolve(data)
+
+        resolve(data)
     })
 }
 
@@ -124,7 +117,7 @@ const Status = (Link) => {
                 if (response.status >= 200 && response.status <= 399) {
                     resolve({
                         href: Link.href,
-                        text: Link.text.substr(0, 50),
+                        text: Link.text.substr(0, 15),
                         file: Link.file,
                         status: response.status,
                         ok: 'Ok'
@@ -132,7 +125,7 @@ const Status = (Link) => {
                 } else if (response.status < 200 || response.status >= 400) {
                     resolve({
                         href: Link.href,
-                        text: Link.text.substr(0, 50),
+                        text: Link.text.substr(0, 15),
                         file: Link.file,
                         status: response.status,
                         ok: 'Fail'
@@ -142,7 +135,7 @@ const Status = (Link) => {
             .catch(() => {
                 resolve(validateLinkStatus = {
                     href: Link.href,
-                    text: Link.text.substr(0, 50),
+                    text: Link.text.substr(0, 15),
                     file: Link.file,
                     status: 404,
                     ok: 'Fail'
