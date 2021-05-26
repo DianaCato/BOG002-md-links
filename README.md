@@ -51,4 +51,8 @@ En la línea de interfaz de comando (CLI), podemos ingresar los siguientes coman
 ![mdLinks-path-validate-stats](./img/mdLinks-path-validate-stats.PNG)
 
 * mdLinks --help
-![mdLinks-help](./img/mdLinks-help.PNG)
+![mdLinks-help](./img/mdlinks-help.PNG)
+
+### Cometarios
+
+Para este proyecto se utiliza el módulo `markdownw-links-extractor`, con una modificación disponible en la carpeta `markdownw-links-extractor-modificado`
